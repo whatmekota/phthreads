@@ -43,7 +43,7 @@ const MAX_ROWS = 300
 export default function activate(ctx: PluginContext) {
   ctx.ui.style(CSS)
   const forum = createForum(ctx)
-  /** playhound before 2.2 has no library.tag / setSource / info. */
+  /** playhound before 2.1.1 has no library.tag / setSource / info. */
   const canTag = () => typeof ctx.library.tag === 'function'
 
   let videos: LibraryVideo[] = []

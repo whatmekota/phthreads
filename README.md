@@ -2,7 +2,7 @@
 
 **18+ only.** A plugin for [playhound](https://github.com/whatmekota/playhound) that finds the [EroScripts](https://discuss.eroscripts.com) thread each video in your library came from. Then it can bring the thread's tags over to your videos, and tell you when a thread's scripts changed since you got them.
 
-Needs playhound **2.2.0** or newer (the first with the `library-edit` permission). Older versions refuse to install it.
+Needs playhound **2.1.1** or newer (the first with the `library-edit` permission). Older versions refuse to install it.
 
 ## Install
 
