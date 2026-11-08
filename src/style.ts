@@ -1,6 +1,6 @@
 /** The page's CSS. Only the app's CSS custom properties, so it follows the theme. */
 export const CSS = `
-.pht { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 10px; padding: 16px 20px; color: var(--text); font-size: 12.5px; }
+.pht { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; width: 100%; gap: 10px; padding: 16px 20px; color: var(--text); font-size: 12.5px; }
 .pht * { box-sizing: border-box; }
 .pht-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .pht-title { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 3px; }
@@ -20,14 +20,15 @@ export const CSS = `
 .pht-tab[aria-pressed=true] { background: var(--bg-800); color: var(--text); }
 .pht-status { min-height: 18px; color: var(--text-muted); font-size: 12px; }
 .pht-status.is-bad { color: var(--danger); }
-.pht-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.pht-row { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md, 10px); background: var(--bg-900); display: flex; flex-direction: column; gap: 6px; }
+.pht-list { flex: 1; min-height: 0; min-width: 0; overflow-x: hidden; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.pht-row { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md, 10px); background: var(--bg-900); display: flex; flex-direction: column; gap: 6px; }
 .pht-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .pht-name { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pht-pill { flex: none; height: 18px; padding: 0 7px; border-radius: 99px; font-size: 10.5px; line-height: 18px; background: var(--bg-800); color: var(--text-muted); }
 .pht-pill.is-ok { background: color-mix(in srgb, var(--ok, #22c55e) 16%, transparent); color: var(--ok, #22c55e); }
 .pht-pill.is-warn { background: color-mix(in srgb, var(--warn, #f59e0b) 16%, transparent); color: var(--warn, #f59e0b); }
-.pht-body { display: flex; flex-direction: column; gap: 6px; }
+.pht-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pht-thread { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pht-body:empty { display: none; }
 .pht-thread a, .pht-cand a { color: var(--accent); text-decoration: none; }
 .pht-thread a:hover, .pht-cand a:hover { text-decoration: underline; }
