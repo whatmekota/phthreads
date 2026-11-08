@@ -1,0 +1,10 @@
+{
+  "id": "phthreads",
+  "name": "Threads",
+  "version": "0.1.0",
+  "description": "Finds the EroScripts threads of your library's videos: their tags, and whether a script was updated since.",
+  "author": "whatmekota",
+  "main": "index.js",
+  "api": 2,
+  "permissions": ["library", "library-edit", "network", "stage"]
+}

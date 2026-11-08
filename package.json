@@ -1,0 +1,19 @@
+{
+  "name": "phthreads",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:public": "node build.mjs --public --minify",
+    "test": "node --import tsx --test test/match.test.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "description": "phthreads: finds the EroScripts threads of the videos in your playhound library, for their tags and to see when a script is updated.",
+  "license": "MIT"
+}
