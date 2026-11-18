@@ -1,6 +1,7 @@
 import type { Candidate, ThreadFile } from './match'
 import type { Thread } from './forum'
 import type { LibraryVideo, PluginContext } from './types'
+import { createTrophies } from './achievements'
 import { createForum, ForumError } from './forum'
 import { fileChanges, rank, searchQueries, threadTags, threadUrl, topicIdOf } from './match'
 import { CSS } from './style'
@@ -13,7 +14,8 @@ import { CSS } from './style'
  * and slowly, and every answer is kept, so nothing is asked twice. A clear
  * match is taken; a close call shows the candidates to pick from. A matched
  * video can take the thread's tags, and the thread can be checked later for
- * changed script files.
+ * changed script files. Matching, tagging and spotting updates earn the
+ * plugin's own achievements.
  */
 
 interface Match {
@@ -34,6 +36,14 @@ interface Looked {
   candidates: Candidate[]
 }
 
+/** Counts kept for the achievements. */
+interface Feats {
+  /** Videos that took tags from their thread. */
+  tagged: string[]
+  /** Checks that found a thread's scripts changed. */
+  updates: number
+}
+
 type Filter = 'all' | 'matched' | 'pick' | 'none' | 'new'
 
 const GLOBE = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3.5h10v7H8l-3 2.5v-2.5H3Z"/><path d="M6 6.5h4M6 8.5h2.5"/></svg>'
@@ -49,6 +59,7 @@ export default function activate(ctx: PluginContext) {
   let videos: LibraryVideo[] = []
   let matches: Record<string, Match> = {}
   let looked: Record<string, Looked> = {}
+  let feats: Feats = { tagged: [], updates: 0 }
   let busy: { label: string, done: number, total: number } | null = null
   let stopAsked = false
   let lastError: string | null = null
@@ -58,11 +69,25 @@ export default function activate(ctx: PluginContext) {
     try {
       matches = (await ctx.storage.get<Record<string, Match>>('matches')) ?? {}
       looked = (await ctx.storage.get<Record<string, Looked>>('looked')) ?? {}
+      const f = await ctx.storage.get<Partial<Feats>>('feats')
+      feats = {
+        tagged: Array.isArray(f?.tagged) ? f.tagged.filter(id => typeof id === 'string') : [],
+        updates: Number(f?.updates) || 0,
+      }
     }
     catch (err) {
       ctx.log('could not read saved data', err)
     }
   })()
+
+  const trophies = createTrophies(ctx.achievements, (...args) => ctx.log(...args))
+  const syncTrophies = () => trophies.sync({
+    matched: Object.keys(matches).length,
+    tagged: feats.tagged.length,
+    // A change noted before 0.2.0 counts too.
+    updates: Math.max(feats.updates, Object.values(matches).some(m => m.changes) ? 1 : 0),
+  })
+  void loaded.then(syncTrophies)
 
   async function refreshLibrary() {
     try {
@@ -76,7 +101,10 @@ export default function activate(ctx: PluginContext) {
   }
   ctx.library.onChange(() => void refreshLibrary())
 
-  const save = () => Promise.all([ctx.storage.set('matches', matches), ctx.storage.set('looked', looked)]).catch(() => {})
+  const save = () => {
+    syncTrophies()
+    return Promise.all([ctx.storage.set('matches', matches), ctx.storage.set('looked', looked), ctx.storage.set('feats', feats)]).catch(() => {})
+  }
 
   function statusOf(v: LibraryVideo): Filter {
     if (matches[v.id])
@@ -156,9 +184,12 @@ export default function activate(ctx: PluginContext) {
         return
       const t = await forum.thread(m.id)
       const c = fileChanges(m.files, t.files)
+      const changed = !!(c.added.length || c.removed.length || c.replaced.length)
+      if (changed && !m.changes)
+        feats.updates++
       m.title = t.title
       m.tags = t.tags
-      m.changes = c.added.length || c.removed.length || c.replaced.length ? { ...c, at: Date.now() } : undefined
+      m.changes = changed ? { ...c, at: Date.now() } : undefined
       await save()
     })
   }
@@ -173,8 +204,12 @@ export default function activate(ctx: PluginContext) {
       if (add.length) {
         await ctx.library.tag(v.id, { add })
         n++
+        if (!feats.tagged.includes(v.id))
+          feats.tagged.push(v.id)
       }
     }
+    if (n)
+      await save()
     await refreshLibrary()
     ctx.ui.toast(n ? `Tags added to ${n} video${n === 1 ? '' : 's'}` : 'They already have the thread\'s tags')
   }

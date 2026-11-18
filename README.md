@@ -2,7 +2,7 @@
 
 **18+ only.** A plugin for [playhound](https://github.com/whatmekota/playhound) that finds the [EroScripts](https://discuss.eroscripts.com) thread each video in your library came from. Then it can bring the thread's tags over to your videos, and tell you when a thread's scripts changed since you got them.
 
-Needs playhound **2.1.1** or newer (the first with the `library-edit` permission). Older versions refuse to install it.
+Needs playhound **2.2.8** or newer (plugin API 7). Older versions refuse to install it.
 
 ## Install
 
@@ -22,6 +22,7 @@ Sign in to EroScripts in playhound's EroScripts view first: the plugin uses that
 - **Add their tags** adds the matched threads' tags to your videos (never device tags like `the-handy` or `osr2`, nor `len-*` lengths: playhound has its own length tags). Tags you already have stay.
 - **Check for updates** looks at the matched threads again and lists videos whose thread has new, removed or re-uploaded scripts. **Seen** clears the note.
 - **Stop** stops a run at any time; what was found is kept, and the next run carries on where it stopped.
+- **Achievements** of its own, in playhound's **Stats → Achievements**: the first match, 25, 100 and 250 videos matched, thread tags added to 25 videos, and the first thread found with changed scripts. Matches made before 0.2.0 count.
 
 ### Going easy on the forum
 
@@ -30,7 +31,7 @@ Requests go one at a time, at least 1.2 s apart, so a big library takes a while 
 ## Privacy
 
 - It talks only to EroScripts, through playhound.
-- It stores which thread each video matched and which videos were looked up, in playhound's plugin storage. Removing the plugin removes them.
+- It stores which thread each video matched, which videos were looked up, and which took their thread's tags (for the achievements), in playhound's plugin storage. Removing the plugin removes them.
 
 ## Build
 
