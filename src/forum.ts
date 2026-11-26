@@ -25,6 +25,8 @@ export interface Thread {
   title: string
   tags: string[]
   files: ThreadFile[]
+  /** Who started the thread: on EroScripts, almost always who made the scripts. */
+  creator: string | null
 }
 
 export class ForumError extends Error {
@@ -35,6 +37,12 @@ export class ForumError extends Error {
 
 const tagNames = (tags: unknown): string[] =>
   Array.isArray(tags) ? tags.map(t => (typeof t === 'string' ? t : (t as { name?: string })?.name ?? '')).filter(Boolean) : []
+
+/** The thread's starter, by forum name. */
+export function posterOf(topic: any): string | null {
+  const name = topic?.details?.created_by?.username ?? topic?.post_stream?.posts?.[0]?.username
+  return typeof name === 'string' && name.trim() ? name.trim() : null
+}
 
 export function createForum(ctx: PluginContext) {
   let last = 0
@@ -91,6 +99,7 @@ export function createForum(ctx: PluginContext) {
           title: data.title ?? '',
           tags: tagNames(data.tags),
           files: first ? scriptFilesIn(String(first.cooked ?? ''), first.attachments ?? []) : [],
+          creator: posterOf(data),
         }
       })
     },

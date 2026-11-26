@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.mjs",
     "build:public": "node build.mjs --public --minify",
-    "test": "node --import tsx --test test/match.test.ts test/achievements.test.ts",
+    "test": "node --import tsx --test test/match.test.ts test/achievements.test.ts test/forum.test.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {

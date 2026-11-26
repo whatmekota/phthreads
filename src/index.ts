@@ -25,6 +25,8 @@ interface Match {
   tags: string[]
   /** The thread's script files when it was matched (or last checked and seen). */
   files: ThreadFile[]
+  /** Who started the thread (from 0.3.0). */
+  creator?: string
   how: 'link' | 'search' | 'picked' | 'pasted'
   at: number
   /** What changed since `files`, from the last check. */
@@ -115,8 +117,22 @@ export default function activate(ctx: PluginContext) {
     return l.candidates.length ? 'pick' : 'none'
   }
 
+  /**
+   * The thread's starter as the video's creator, when it has none yet (its
+   * script's own metadata, a download or the user's own say comes first).
+   * playhound before 2.3.1 has no setCreator: skipped.
+   */
+  async function giveCreator(v: LibraryVideo, creator: string | undefined) {
+    if (!creator || typeof ctx.library.setCreator !== 'function')
+      return false
+    const info = ctx.library.info ? await ctx.library.info(v.id).catch(() => null) : null
+    if (!info || info.creator)
+      return false
+    return ctx.library.setCreator(v.id, creator).catch(() => false)
+  }
+
   async function setMatch(v: LibraryVideo, t: Thread, how: Match['how']) {
-    matches[v.id] = { id: t.id, slug: t.slug, title: t.title, tags: t.tags, files: t.files, how, at: Date.now() }
+    matches[v.id] = { id: t.id, slug: t.slug, title: t.title, tags: t.tags, files: t.files, creator: t.creator ?? undefined, how, at: Date.now() }
     delete looked[v.id]
     await save()
     // Kept with the video too, so playhound shows where it came from and the
@@ -125,6 +141,7 @@ export default function activate(ctx: PluginContext) {
       await ctx.library.setSource?.(v.id, threadUrl(t))
     }
     catch {}
+    await giveCreator(v, t.creator ?? undefined)
   }
 
   /** Match one video: its own link first, else a search. Throws ForumError. */
@@ -189,6 +206,8 @@ export default function activate(ctx: PluginContext) {
         feats.updates++
       m.title = t.title
       m.tags = t.tags
+      m.creator = t.creator ?? m.creator
+      await giveCreator(v, m.creator)
       m.changes = changed ? { ...c, at: Date.now() } : undefined
       await save()
     })
@@ -198,9 +217,15 @@ export default function activate(ctx: PluginContext) {
     if (!canTag())
       return
     let n = 0
+    let credited = 0
     for (const v of list) {
       const m = matches[v.id]
-      const add = m ? threadTags(m.tags).filter(t => !v.tags?.includes(t)) : []
+      if (!m)
+        continue
+      // Matched before 0.3.0 kept no creator: their videos get one at the next check.
+      if (await giveCreator(v, m.creator))
+        credited++
+      const add = threadTags(m.tags).filter(t => !v.tags?.includes(t))
       if (add.length) {
         await ctx.library.tag(v.id, { add })
         n++
@@ -211,7 +236,10 @@ export default function activate(ctx: PluginContext) {
     if (n)
       await save()
     await refreshLibrary()
-    ctx.ui.toast(n ? `Tags added to ${n} video${n === 1 ? '' : 's'}` : 'They already have the thread\'s tags')
+    const plural = (k: number) => `${k} video${k === 1 ? '' : 's'}`
+    ctx.ui.toast(n
+      ? `Tags added to ${plural(n)}${credited ? `, and creators to ${plural(credited)}` : ''}`
+      : credited ? `Creators added to ${plural(credited)}` : 'They already have the thread\'s tags')
   }
 
   ctx.ui.page({
@@ -295,6 +323,8 @@ export default function activate(ctx: PluginContext) {
           const line = document.createElement('div')
           line.className = 'pht-thread'
           line.append(link(threadUrl(m), m.title))
+          if (m.creator)
+            line.append(document.createTextNode(` by ${m.creator}`))
           body.append(line)
           const tags = threadTags(m.tags)
           if (tags.length) {
